@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Running planner</title>
+    <link rel="stylesheet" href="static/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+
+</head>
+<body>
+    <div id="mapContainer">
+
+        <div id="sidePanel">
+            
+            {% if user %}
+            {{user}}
+            <form action="/logout" style="display: inline;">
+                <input type="submit" value="Logout" />
+            </form>
+            <!--<button id="Logout" class="button" action="location.href='/logout'">Logout</button> -->
+            {% else %}
+            <button id="OpenLogin" class="button">Login</button>
+            <button id="OpenRegister" class="button">Register</button>
+            <script>
+                document.getElementById("OpenLogin").onclick = function(e){
+                    document.getElementById('loginPopup').toggleAttribute("hidden");
+                }
+                document.getElementById("OpenRegister").onclick = function(e){
+                    document.getElementById('registerPopup').toggleAttribute("hidden");
+                }
+            </script>
+            {% endif %}
+
+            <br> <!--Temp-->
+
+            <button id ="ClearButton" type="button"> Clear </button>
+
+
+            <button id ="StartButton" type="button"> Start Plan </button>
+            <button id ="EndButton" type="button" disabled> Stop Plan </button>
+
+            <br>
+
+            <label class="toggleSwitch">
+                Follow Roads
+                <input type="checkbox" id="routingToggle" />
+                <span class="slider"></span>
+            </label>
+           
+
+            <p id="DistanceCount">Distance: 0.00 Km</p>
+
+
+            <button id ="UndoButton" type="button"> Undo </button>
+
+
+            <button id="SaveButton" type="button"> Download </button>
+
+
+            <input type="file" id="fileInput" style="display:none;" />
+            <button id="LoadButton" type="button" onclick="document.getElementById('fileInput').click();"> Load </button>
+
+
+            <button id="ExportButton" type="button"> Export </button>
+            
+            
+            
+            {% if user %}
+            <br>
+            <br>
+            <form id="routeForm" action="/save" method="post">
+                <label for="routeName">Route name:</label>
+                <input type="text" name="routeName" value="">
+                <input type="hidden" id = "routeFormData" name="routeData" value="">
+            </form>
+
+            {% with saveMessages = get_flashed_messages(category_filter=["saveMessage"])%}
+                {%if saveMessages%}
+                <ul class="flashes">
+                    {%for message in saveMessages%}
+                        <li class = "saveMessage">{{ message }}</li>
+                    {%endfor%}
+                </ul>
+                {%endif%}
+            {% endwith%}
+
+            <button id="SaveButton_DB" type="button"> Save Route </button>
+            <br>
+
+            <label for="routeSelect">Saved routes: </label>
+            <select name="routeSelect" id="routeSelect">
+                <option value="">---</option>
+                {% for R in routes %}
+                <option value='{{R[2]|string}}'>{{R[1]}}</option>
+                {% endfor %}
+            </select>
+            <button id="loadButton_DB" type="button"> Load Route</button>
+            {% endif %}
+
+        </div>
+
+        <div id="mapID" class="map-display"></div>
+
+        
+
+    </div>
+
+    {% with logErrors = get_flashed_messages(category_filter=["logError"])%}
+    {% if logErrors %}
+    <div id="loginPopup" class="popup-form" >
+    {% else %}
+    <div id="loginPopup" class="popup-form" hidden="">
+    {% endif %}
+        <span class="popup-helper"></span>
+        <div>
+            <button id="CloseLogin">Close</button>
+
+            <h2 class="form-title">Login</h2>
+
+            {% if logErrors %}
+            <ul class="flashes">
+                {% for message in logErrors%}
+                    <li class = "FormError">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <form id="loginForm" class="user-form" action="/login" method="post">
+                <label for="uName">Username: </label>
+                <input type="text" name="uName" />
+                <label for="pWord">Password:  </label>
+                <input type="password" name="pWord" />
+                <input type="submit" value="Submit" />
+            </form>
+
+        </div>
+    </div>
+    {% endwith %}
+
+    {% with regErrors = get_flashed_messages(category_filter=["regError"])%}
+    {% if regErrors %}
+    <div id="registerPopup" class="popup-form">
+    {% else %}
+    <div id="registerPopup" class="popup-form" hidden="">
+    {% endif %}
+        <span class="popup-helper"></span>
+        <div>
+            <button id="CloseRegister">Close</button>
+
+            <h2 class="form-title">Register</h2>
+            
+            {% if regErrors %}
+            <ul class="flashes">
+                {% for message in regErrors%}
+                    <li class = "FormError">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            <form id="regForm" class="user-form" action="/register" method="post">
+                <label for="uName">Username: </label>
+                <br>
+                <input type="text" name="uName" />
+                <br>
+                <label for="pWord">Password: </label>
+                <br>
+                <input type="password" name="pWord" />
+                <br>
+                <label for="pWord2">Re-Enter Password: </label>
+                <br>
+                <input type="password" name="pWord2" />
+                <br>
+                <input type="submit" value="Submit" />
+            </form>
+
+        </div>
+    </div>
+    {% endwith %}
+    
+
+    <script src='static/main.js'></script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+    <script src='static/libraries/togpx/togpx.js'></script>
+
+
+
+</body>
+</html>
+
+
